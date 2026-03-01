@@ -1,43 +1,26 @@
-const express = require("express");
-const cors = require("cors");
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// CHANGE THIS to something hard to guess
-const API_KEY = process.env.API_KEY;
-if (!API_KEY) throw new Error("Missing API_KEY env var");
-
-// store latest message
-let lastMessage = "";
 let lastId = 0;
+let payload = { type: "text", text: "", image: "" };
 
-// Website sends message here
 app.post("/send", (req, res) => {
   if (req.headers["x-api-key"] !== API_KEY) {
     return res.status(401).json({ ok: false, error: "bad key" });
   }
 
-  const msg = String(req.body?.message ?? "").slice(0, 120).trim();
-  if (!msg) return res.status(400).json({ ok: false, error: "empty message" });
+  const type = String(req.body?.type ?? "text");
+  const text = String(req.body?.text ?? "").slice(0, 120);
+  const image = String(req.body?.image ?? "");
+
+  if (type === "text" && !text.trim()) return res.status(400).json({ ok:false, error:"empty text" });
+  if (type === "image" && !image.trim()) return res.status(400).json({ ok:false, error:"empty image" });
 
   lastId++;
-  lastMessage = msg;
-
+  payload = { type, text, image };
   res.json({ ok: true, id: lastId });
 });
 
-// Roblox reads message here
 app.get("/latest", (req, res) => {
   if (req.headers["x-api-key"] !== API_KEY) {
     return res.status(401).json({ ok: false, error: "bad key" });
   }
-
-  res.json({ id: lastId, message: lastMessage });
+  res.json({ id: lastId, ...payload });
 });
-
-// IMPORTANT: Render gives you a PORT env var
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => console.log("API running on port", PORT));
