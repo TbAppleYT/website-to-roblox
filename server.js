@@ -6,7 +6,8 @@ app.use(cors());
 app.use(express.json());
 
 // CHANGE THIS to something hard to guess
-const API_KEY = "8c2c1f9a2f0b4d6aa1b0a9d1b3a1e7f9";
+const API_KEY = process.env.API_KEY;
+if (!API_KEY) throw new Error("Missing API_KEY env var");
 
 // store latest message
 let lastMessage = "";
@@ -38,4 +39,5 @@ app.get("/latest", (req, res) => {
 
 // IMPORTANT: Render gives you a PORT env var
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => console.log("API running on port", PORT));
